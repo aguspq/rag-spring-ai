@@ -1,12 +1,33 @@
 spring:
   application:
     name: rag
+
+  # 1. Spring Data Connexion JDBC/JPA (Linux Postgres)
+  datasource:
+    url: jdbc:postgresql://192.168.1.202:5432/ragdb
+    username: raguser
+    password: ragpassword
+    driver-class-name: org.postgresql.Driver
+
+  # 2. Disabled local Docker Compose (Mac)
+  docker:
+    compose:
+      enabled: false
+
+  # 3. Spring AI config (Ollama + PGVector)
   ai:
     ollama:
       base-url: http://192.168.1.202:11434
       chat:
         options:
-          model: llama3.2
-  docker:
-    compose:
-      enable: false
+          model: qwen2.5:0.5b
+      embedding:
+        options:
+          model: nomic-embed-text # 768 dimensions
+
+    vectorstore:
+      pgvector:
+        index-type: HNSW
+        distance-type: COSINE_DISTANCE
+        dimensions: 768 # MUST match witch 'nomic-embed-text'
+        initialize-schema: true
