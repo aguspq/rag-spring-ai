@@ -1,7 +1,5 @@
-package com.agustin.ai.rag.controller;
+package com.agustin.ai.rag.chat;
 
-import com.agustin.ai.rag.service.AiAssistantService;
-import org.springframework.ai.chat.model.ChatModel;
 import org.springframework.web.bind.annotation.*;
 
 @RestController

@@ -1,7 +1,11 @@
 spring:
   application:
     name: rag
-
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+    open-in-view: false
   # 1. Spring Data Connexion JDBC/JPA (Linux Postgres)
   datasource:
 #    url: jdbc:postgresql://192.168.1.202:5432/ragdb
@@ -23,6 +27,8 @@ spring:
       chat:
         options:
           model: qwen2.5:0.5b
+          temperature: 0.2
+          num-ctx: 4096
       embedding:
         options:
           model: nomic-embed-text # 768 dimensions

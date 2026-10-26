@@ -1,4 +1,4 @@
-package com.agustin.ai.rag.service;
+package com.agustin.ai.rag.chat;
 
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.stereotype.Service;
