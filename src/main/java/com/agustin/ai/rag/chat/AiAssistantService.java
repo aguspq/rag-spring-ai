@@ -16,7 +16,7 @@ public class AiAssistantService {
         return this.chatClient
                 .prompt()
                 .user(prompt)
-                .call()
-                .content();
+                .call() // sends the request to AI model
+                .content(); // returns AI's response
     }
 }

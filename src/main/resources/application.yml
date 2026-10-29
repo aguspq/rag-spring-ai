@@ -8,8 +8,7 @@ spring:
     open-in-view: false
   # 1. Spring Data Connexion JDBC/JPA (Linux Postgres)
   datasource:
-#    url: jdbc:postgresql://192.168.1.202:5432/ragdb
-    url: jdbc:postgresql://100.77.221.102:5432/ragdb # tailscale
+    url: jdbc:postgresql://localhost:5432/ragdb
     username: raguser
     password: ragpassword
     driver-class-name: org.postgresql.Driver
@@ -22,11 +21,10 @@ spring:
   # 3. Spring AI config (Ollama + PGVector)
   ai:
     ollama:
-#      base-url: http://192.168.1.202:11434
-      base-url: http://100.77.221.102:11434 # tailscale
+      base-url: http://localhost:11434
       chat:
         options:
-          model: qwen2.5:0.5b
+          model: llama3.2:3b
           temperature: 0.2
           num-ctx: 4096
       embedding:
