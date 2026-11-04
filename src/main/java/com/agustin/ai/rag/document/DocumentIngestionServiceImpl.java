@@ -2,8 +2,10 @@ package com.agustin.ai.rag.document;
 
 import com.agustin.ai.rag.document.dto.DocumentResponseRecord;
 import com.agustin.ai.rag.document.repository.DocumentRepository;
+import jakarta.transaction.Transactional;
 import org.springframework.ai.reader.pdf.PagePdfDocumentReader;
 import org.springframework.ai.transformer.splitter.TokenTextSplitter;
+import org.springframework.ai.vectorstore.VectorStore;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.stereotype.Service;
 
@@ -13,20 +15,23 @@ import java.io.IOException;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.List;
+import java.util.Map;
 
 @Service
 public class DocumentIngestionServiceImpl implements DocumentIngestionService{
     private final DocumentRepository documentRepository;
     private final TokenTextSplitter tokenTextSplitter;
     private final TextCleaningTransformer textCleaningTransformer;
+    private final VectorStore vectorStore;
 
-    public DocumentIngestionServiceImpl(DocumentRepository documentRepository, TokenTextSplitter tokenTextSplitter, TextCleaningTransformer textCleaningTransformer){
+    public DocumentIngestionServiceImpl(DocumentRepository documentRepository, TokenTextSplitter tokenTextSplitter, TextCleaningTransformer textCleaningTransformer, VectorStore vectorStore){
         this.documentRepository = documentRepository;
         this.tokenTextSplitter = tokenTextSplitter;
         this.textCleaningTransformer = textCleaningTransformer;
+        this.vectorStore = vectorStore;
     }
 
-    private DocumentResponseRecord registerDocument(String filePath, String fileHashSha256){
+    private Document registerDocument(String filePath, String fileHashSha256){
 //        validate
         if(documentRepository.existsByFileHashSha256(fileHashSha256)){
             throw new IllegalArgumentException("Document with hash " + fileHashSha256 + " is already register.");
@@ -37,7 +42,7 @@ public class DocumentIngestionServiceImpl implements DocumentIngestionService{
 
         Document savedDocument = documentRepository.save(document);
 
-        return DocumentResponseRecord.fromEntity(savedDocument);
+        return savedDocument;
 
     }
 
@@ -66,6 +71,7 @@ public class DocumentIngestionServiceImpl implements DocumentIngestionService{
         return hexString.toString();
     }
 
+    @Transactional
     @Override
     public DocumentResponseRecord ingestDocument(String filePath) { // change try catch for personalized Exceptions (create it)
         try {
@@ -73,7 +79,7 @@ public class DocumentIngestionServiceImpl implements DocumentIngestionService{
             byte[] hashSha = objectToHash(pdfResource);
             String hexHashSha = bytesToHex(hashSha);
 
-            DocumentResponseRecord response = registerDocument(filePath, hexHashSha);
+            Document document = registerDocument(filePath, hexHashSha);
 
             List<org.springframework.ai.document.Document> documents = documentReader(filePath);
 
@@ -81,8 +87,14 @@ public class DocumentIngestionServiceImpl implements DocumentIngestionService{
 
             // save them into database
             List<org.springframework.ai.document.Document> chunks = textSplitter(cleanDocuments);
+            for (org.springframework.ai.document.Document chunk : chunks){
+                chunk.getMetadata().put("document_id", document.getId());
+            }
+            vectorStore.add(chunks);
+            document.markAsProcessed();
+            documentRepository.save(document);
 
-            return response;
+            return DocumentResponseRecord.fromEntity(document);
 
         } catch (NoSuchAlgorithmException | IOException e) {
             throw new RuntimeException(e);

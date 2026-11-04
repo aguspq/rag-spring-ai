@@ -56,8 +56,10 @@ public class Document {
         return createdAt;
     }
 
-    public void setStatus(DocumentStatus status) {
-        this.status = status;
-    }
+//    public void setStatus(DocumentStatus status) {
+//        this.status = status;
+//    }
+
+    public void markAsProcessed() { this.status = DocumentStatus.PROCESSED; }
 
 }

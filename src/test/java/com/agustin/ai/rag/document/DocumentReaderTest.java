@@ -29,7 +29,7 @@ public class DocumentReaderTest {
 
         assertNotNull(respone);
         assertEquals(filePath, respone.filename());
-        assertEquals(DocumentStatus.PENDING, respone.status());
+        assertEquals(DocumentStatus.PROCESSED, respone.status());
 
     }
 
