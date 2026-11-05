@@ -15,7 +15,6 @@ import java.io.IOException;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.List;
-import java.util.Map;
 
 @Service
 public class DocumentIngestionServiceImpl implements DocumentIngestionService{
@@ -79,17 +78,18 @@ public class DocumentIngestionServiceImpl implements DocumentIngestionService{
             byte[] hashSha = objectToHash(pdfResource);
             String hexHashSha = bytesToHex(hashSha);
 
+            // marked as PENDING
             Document document = registerDocument(filePath, hexHashSha);
 
             List<org.springframework.ai.document.Document> documents = documentReader(filePath);
 
             List<org.springframework.ai.document.Document> cleanDocuments =  textCleaningTransformer.apply(documents);
 
-            // save them into database
             List<org.springframework.ai.document.Document> chunks = textSplitter(cleanDocuments);
             for (org.springframework.ai.document.Document chunk : chunks){
                 chunk.getMetadata().put("document_id", document.getId());
             }
+            // save into database
             vectorStore.add(chunks);
             document.markAsProcessed();
             documentRepository.save(document);
