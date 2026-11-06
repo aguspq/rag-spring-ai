@@ -2,6 +2,8 @@ package com.agustin.ai.rag.document;
 
 import com.agustin.ai.rag.document.dto.DocumentResponseRecord;
 import com.agustin.ai.rag.document.repository.DocumentRepository;
+import com.agustin.ai.rag.exception.DocumentAlreadyExistsException;
+import com.agustin.ai.rag.exception.DocumentReadException;
 import jakarta.transaction.Transactional;
 import org.springframework.ai.reader.pdf.PagePdfDocumentReader;
 import org.springframework.ai.transformer.splitter.TokenTextSplitter;
@@ -33,7 +35,7 @@ public class DocumentIngestionServiceImpl implements DocumentIngestionService{
     private Document registerDocument(String filePath, String fileHashSha256){
 //        validate
         if(documentRepository.existsByFileHashSha256(fileHashSha256)){
-            throw new IllegalArgumentException("Document with hash " + fileHashSha256 + " is already register.");
+            throw new DocumentAlreadyExistsException(fileHashSha256);
         }
 
 //        create entity with PENDING status
@@ -97,7 +99,7 @@ public class DocumentIngestionServiceImpl implements DocumentIngestionService{
             return DocumentResponseRecord.fromEntity(document);
 
         } catch (NoSuchAlgorithmException | IOException e) {
-            throw new RuntimeException(e);
+            throw new DocumentReadException("Error processing or reading file: " + filePath, e);
         }
 
     }
