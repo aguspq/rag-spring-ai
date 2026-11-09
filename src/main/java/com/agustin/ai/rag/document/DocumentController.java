@@ -5,6 +5,7 @@ import org.springframework.ai.ollama.OllamaChatModel;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 
 @RestController
@@ -12,30 +13,19 @@ import org.springframework.web.bind.annotation.*;
 public class DocumentController {
 
     private final DocumentIngestionService documentIngestionService;
-    private final OllamaChatModel chatModel;
 
-    public DocumentController(DocumentIngestionService documentIngestionService, OllamaChatModel chatModel){
+    public DocumentController(DocumentIngestionService documentIngestionService){
         this.documentIngestionService = documentIngestionService;
-        this.chatModel = chatModel;
     }
 
     @PostMapping
     public ResponseEntity<DocumentResponseRecord> registerDocument(
-            @RequestParam String filename
-//            @RequestParam String fileHashSha256
+            @RequestParam MultipartFile file
     )  {
-        DocumentResponseRecord response = documentIngestionService.ingestDocument(filename);
+        DocumentResponseRecord response = documentIngestionService.ingestDocument(file);
 
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
 
     }
-
-    @PostMapping("/api/test")
-    public String test(@RequestBody String userPrompt){
-
-        return chatModel.call(userPrompt);
-    }
-
-
 
 }

@@ -6,6 +6,13 @@ import jakarta.transaction.Transactional;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.core.io.ClassPathResource;
+import org.springframework.core.io.Resource;
+import org.springframework.http.MediaType;
+import org.springframework.mock.web.MockMultipartFile;
+import org.springframework.web.multipart.MultipartFile;
+
+import java.io.IOException;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -15,8 +22,16 @@ public class DocumentReaderTest {
 
     private final DocumentIngestionServiceImpl documentIngestionService;
 
+    Resource resource = new ClassPathResource("opiManual.pdf");
+    MultipartFile multipartFile = new MockMultipartFile(
+            "file",     // name in @RequestParam (in controller)
+            "opiManual.pdf",
+            MediaType.APPLICATION_PDF_VALUE,
+            resource.getContentAsByteArray()
+    );
+
     @Autowired
-    public DocumentReaderTest(DocumentIngestionServiceImpl documentIngestionService){
+    public DocumentReaderTest(DocumentIngestionServiceImpl documentIngestionService) throws IOException {
         this.documentIngestionService = documentIngestionService;
 
     }
@@ -25,10 +40,10 @@ public class DocumentReaderTest {
     public void ingestDocument_ShouldFail_When_DocumentAlreadyExists(){
         String filePath = "opiManual.pdf";
         // 1rst ingestion
-        documentIngestionService.ingestDocument(filePath);
+        documentIngestionService.ingestDocument(multipartFile);
 
         assertThrows(DocumentAlreadyExistsException.class, ()
-                -> documentIngestionService.ingestDocument(filePath));
+                -> documentIngestionService.ingestDocument(multipartFile));
 
     }
 
@@ -37,7 +52,7 @@ public class DocumentReaderTest {
         String invalidFilePath = "nonvalid.pdf";
 
         assertThrows(DocumentReadException.class, () -> {
-            documentIngestionService.ingestDocument(invalidFilePath);
+            documentIngestionService.ingestDocument(multipartFile);
         });
 
     }
@@ -46,7 +61,7 @@ public class DocumentReaderTest {
     void ingestDocument_ShouldSuccess_When_ValidDocument(){
         String filePath = "opiManual.pdf";
 
-        DocumentResponseRecord response = documentIngestionService.ingestDocument(filePath);
+        DocumentResponseRecord response = documentIngestionService.ingestDocument(multipartFile);
 
         assertNotNull(response);
         assertEquals(filePath, response.filename());

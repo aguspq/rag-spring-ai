@@ -8,10 +8,10 @@ import jakarta.transaction.Transactional;
 import org.springframework.ai.reader.pdf.PagePdfDocumentReader;
 import org.springframework.ai.transformer.splitter.TokenTextSplitter;
 import org.springframework.ai.vectorstore.VectorStore;
-import org.springframework.core.io.ClassPathResource;
 import org.springframework.stereotype.Service;
 
 import org.springframework.core.io.Resource;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.security.MessageDigest;
@@ -32,14 +32,14 @@ public class DocumentIngestionServiceImpl implements DocumentIngestionService{
         this.vectorStore = vectorStore;
     }
 
-    private Document registerDocument(String filePath, String fileHashSha256){
+    private Document registerDocument(String fileName, String fileHashSha256){
 //        validate
         if(documentRepository.existsByFileHashSha256(fileHashSha256)){
             throw new DocumentAlreadyExistsException(fileHashSha256);
         }
 
 //        create entity with PENDING status
-        Document document = new Document(filePath, fileHashSha256, DocumentStatus.PENDING);
+        Document document = new Document(fileName, fileHashSha256, DocumentStatus.PENDING);
 
         Document savedDocument = documentRepository.save(document);
 
@@ -47,9 +47,9 @@ public class DocumentIngestionServiceImpl implements DocumentIngestionService{
 
     }
 
-    private List<org.springframework.ai.document.Document> documentReader (String filePath){
-        Resource pdfResource = new ClassPathResource(filePath);
-        PagePdfDocumentReader reader = new PagePdfDocumentReader(pdfResource);
+    private List<org.springframework.ai.document.Document> documentReader (Resource file){
+//        Resource pdfResource = new ClassPathResource(filePath);
+        PagePdfDocumentReader reader = new PagePdfDocumentReader(file);
 
         return reader.get();
     }
@@ -74,16 +74,17 @@ public class DocumentIngestionServiceImpl implements DocumentIngestionService{
 
     @Transactional
     @Override
-    public DocumentResponseRecord ingestDocument(String filePath) { // change try catch for personalized Exceptions (create it)
+    public DocumentResponseRecord ingestDocument(MultipartFile file) { // change try catch for personalized Exceptions (create it)
         try {
-            Resource pdfResource = new ClassPathResource(filePath);
-            byte[] hashSha = objectToHash(pdfResource);
+//            Resource pdfResource = new ClassPathResource(file);
+            Resource resource = file.getResource();
+            byte[] hashSha = objectToHash(resource);
             String hexHashSha = bytesToHex(hashSha);
 
             // marked as PENDING
-            Document document = registerDocument(filePath, hexHashSha);
+            Document document = registerDocument(file.getOriginalFilename(), hexHashSha);
 
-            List<org.springframework.ai.document.Document> documents = documentReader(filePath);
+            List<org.springframework.ai.document.Document> documents = documentReader(resource);
 
             List<org.springframework.ai.document.Document> cleanDocuments =  textCleaningTransformer.apply(documents);
 
@@ -99,7 +100,7 @@ public class DocumentIngestionServiceImpl implements DocumentIngestionService{
             return DocumentResponseRecord.fromEntity(document);
 
         } catch (NoSuchAlgorithmException | IOException e) {
-            throw new DocumentReadException("Error processing or reading file: " + filePath, e);
+            throw new DocumentReadException("Error processing or reading file: " + file, e);
         }
 
     }
