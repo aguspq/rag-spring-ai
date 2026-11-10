@@ -1,6 +1,14 @@
 spring:
+  servlet:
+    multipart:
+      enabled: true
+      max-file-size: 30MB
+      max-request-size: 30MB
+#      spring.servlet.multipart.max-file-size=20MB
+  #spring.servlet.multipart.max-request-size=20MB
   application:
     name: rag
+
   jpa:
     hibernate:
       ddl-auto: update
@@ -37,3 +45,4 @@ spring:
         distance-type: COSINE_DISTANCE
         dimensions: 768 # MUST match witch 'nomic-embed-text'
         initialize-schema: true
+
