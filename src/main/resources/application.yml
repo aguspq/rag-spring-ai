@@ -46,3 +46,7 @@ spring:
         dimensions: 768 # MUST match witch 'nomic-embed-text'
         initialize-schema: true
 
+  rag:
+    similarity:
+      top-k: 4
+      threshold: 0.65

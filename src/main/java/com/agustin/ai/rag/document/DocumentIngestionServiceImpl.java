@@ -90,7 +90,8 @@ public class DocumentIngestionServiceImpl implements DocumentIngestionService{
 
             List<org.springframework.ai.document.Document> chunks = textSplitter(cleanDocuments);
             for (org.springframework.ai.document.Document chunk : chunks){
-                chunk.getMetadata().put("document_id", document.getId());
+                chunk.getMetadata().put("document_id", document.getId().toString());
+                chunk.getMetadata().put("file_name", document.getFilename());
             }
             // save into database
             vectorStore.add(chunks);
