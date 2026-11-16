@@ -48,10 +48,12 @@ public class DocumentIngestionServiceImpl implements DocumentIngestionService{
     }
 
     private List<org.springframework.ai.document.Document> documentReader (Resource file){
-//        Resource pdfResource = new ClassPathResource(filePath);
-        PagePdfDocumentReader reader = new PagePdfDocumentReader(file);
-
-        return reader.get();
+        try {
+            PagePdfDocumentReader reader = new PagePdfDocumentReader(file);
+            return reader.get();
+        } catch (RuntimeException e) {
+            throw new DocumentReadException("Failed to read or parse PDF file: " + file.getFilename(), e);
+        }
     }
 
     private byte[] objectToHash(Resource pdfResource) throws NoSuchAlgorithmException, IOException {

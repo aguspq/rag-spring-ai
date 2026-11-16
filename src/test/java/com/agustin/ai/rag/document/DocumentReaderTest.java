@@ -38,7 +38,6 @@ public class DocumentReaderTest {
 
     @Test
     public void ingestDocument_ShouldFail_When_DocumentAlreadyExists(){
-        String filePath = "opiManual.pdf";
         // 1rst ingestion
         documentIngestionService.ingestDocument(multipartFile);
 
@@ -48,8 +47,15 @@ public class DocumentReaderTest {
     }
 
     @Test
-    void ingestDocument_ShouldFail_When_DocumentNotFound(){
+    void ingestDocument_ShouldFail_When_DocumentNotFound() {
         String invalidFilePath = "nonvalid.pdf";
+
+        MultipartFile multipartFile = new MockMultipartFile(
+                "file",     // name in @RequestParam (in controller)
+                invalidFilePath,
+                MediaType.APPLICATION_PDF_VALUE,
+                new byte[0]
+        );
 
         assertThrows(DocumentReadException.class, () -> {
             documentIngestionService.ingestDocument(multipartFile);
